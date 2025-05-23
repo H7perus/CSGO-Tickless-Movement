@@ -7,7 +7,6 @@
 #include <igameevents.h>
 #include <iplayerinfo.h>
 #include <sh_vector.h>
-// #include "engine_wrappers.h" // Removed as it causes build errors and seems unused
 
 void DisablePred() {
     ConVar* myCvar = g_pCVar->FindVar("cl_predict");
