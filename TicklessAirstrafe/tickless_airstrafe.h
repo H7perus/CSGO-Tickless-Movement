@@ -25,7 +25,7 @@ public:
     void PostConnect(edict_t *pEntity, char const *playername);
     const char *GetAuthor() { return "H7per"; }
     const char *GetName() { return "Tickless Airstrafe"; }
-    const char *GetDescription() { return "This plugin implements a numerical integration of air acceleration. It assumes that the viewangle has rotated continuously from the last tick to the current one, with no change in air acceleration over the tick interval."; }
+    const char *GetDescription() { return "This plugin implements an analytical integration of air acceleration. It assumes that the viewangle has rotated continuously from the last tick to the current one, with no change in air acceleration over the tick interval."; }
     const char *GetURL() { return "https://github.com/yourusername/TicklessAirstrafeMetaMod"; }
     const char *GetLicense() { return "MIT"; }
     const char *GetVersion() { return "1.0.0"; }
