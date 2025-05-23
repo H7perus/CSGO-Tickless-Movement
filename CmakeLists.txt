@@ -1,0 +1,125 @@
+cmake_minimum_required(VERSION 3.10)
+project(SourceEnginePlugins)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Force 32-bit build
+if(WIN32)
+    set(CMAKE_GENERATOR_PLATFORM Win32)
+endif()
+
+# Set output directories
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# SDK paths - adjust these to your system
+set(HL2SDK_PATH "${CMAKE_SOURCE_DIR}/hl2sdk-csgo" CACHE PATH "Path to HL2SDK CS:GO")
+set(METAMOD_PATH "${CMAKE_SOURCE_DIR}/metamod-source" CACHE PATH "Path to MetaMod SDK")
+
+# Include directories - shared across all projects
+include_directories(
+    /
+    ${HL2SDK_PATH}/game/shared
+    ${HL2SDK_PATH}/game
+    ${HL2SDK_PATH}/public
+    ${HL2SDK_PATH}/public/engine
+    ${HL2SDK_PATH}/public/tier0
+    ${HL2SDK_PATH}/public/tier1
+    ${HL2SDK_PATH}/public/game/server
+    ${METAMOD_PATH}/core
+    ${METAMOD_PATH}/core/sourcehook
+)
+
+# Auto-discover all HL2SDK include directories
+file(GLOB_RECURSE ALL_HL2SDK_PATHS
+    CONFIGURE_DEPENDS
+    "${CMAKE_SOURCE_DIR}/hl2sdk-csgo/*"
+)
+
+set(HL2SDK_INCLUDE_DIRS "")
+foreach(path IN LISTS ALL_HL2SDK_PATHS)
+    if(IS_DIRECTORY ${path})
+        list(APPEND HL2SDK_INCLUDE_DIRS ${path})
+    endif()
+endforeach()
+
+include_directories(${HL2SDK_INCLUDE_DIRS})
+
+# Source Engine compiler definitions
+list(APPEND SE_COMPILE_DEFINITIONS
+    SOURCE_ENGINE=12
+    SE_EPISODEONE=1
+    SE_DARKMESSIAH=2
+    SE_ORANGEBOX=3
+    SE_BLOODYGOODTIME=4
+    SE_EYE=5
+    SE_CSS=6
+    SE_ORANGEBOXVALVE=7
+    SE_LEFT4DEAD=8
+    SE_LEFT4DEAD2=9
+    SE_ALIENSWARM=10
+    SE_PORTAL2=11
+    SE_CSGO=12
+    SE_DOTA=14
+)
+
+# Platform-specific definitions and compiler settings
+if(WIN32)
+    list(APPEND SE_COMPILE_DEFINITIONS WIN32 _WINDOWS _WIN32 _X86_ _MBCS GAME_DLL)
+    
+    if(MSVC)
+        # Set linker flags to avoid LIBCMT conflicts when using /MD
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMT")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /NODEFAULTLIB:LIBCMT")
+        
+        # Common MSVC compile options
+        set(SE_COMPILE_OPTIONS /W4 /MP /arch:IA32 /MD)
+    endif()
+else()
+    # Common GCC/Clang compile options
+    set(SE_COMPILE_OPTIONS -Wall -Wextra -m32)
+endif()
+
+# Function to create a Source Engine plugin
+function(add_source_engine_plugin target_name)
+    # Parse arguments
+    set(options "")
+    set(oneValueArgs "")
+    set(multiValueArgs SOURCES)
+    cmake_parse_arguments(PLUGIN "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    
+    # Create shared library
+    add_library(${target_name} SHARED ${PLUGIN_SOURCES})
+    
+    # Apply common compile definitions
+    target_compile_definitions(${target_name} PRIVATE ${SE_COMPILE_DEFINITIONS})
+    
+    # Apply common compile options
+    if(MSVC)
+        target_compile_options(${target_name} PRIVATE ${SE_COMPILE_OPTIONS})
+    else()
+        target_compile_options(${target_name} PRIVATE ${SE_COMPILE_OPTIONS})
+    endif()
+    
+    # Set output name based on platform
+    if(WIN32)
+        set_target_properties(${target_name} PROPERTIES SUFFIX "_mm.dll")
+    else()
+        set_target_properties(${target_name} PROPERTIES SUFFIX "_mm_i386.so")
+    endif()
+    
+    # Link libraries on Windows
+    if(WIN32)
+        target_link_libraries(${target_name} PRIVATE
+            "${HL2SDK_PATH}/lib/public/tier0.lib"
+            "${HL2SDK_PATH}/lib/public/tier1.lib"
+            "${HL2SDK_PATH}/lib/public/vstdlib.lib"
+            "${HL2SDK_PATH}/lib/public/interfaces.lib"
+            legacy_stdio_definitions.lib
+        )
+    endif()
+endfunction()
+
+# Add subdirectories for individual projects
+add_subdirectory(TicklessAirstrafe)
