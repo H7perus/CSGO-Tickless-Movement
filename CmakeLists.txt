@@ -20,22 +20,19 @@ set(METAMOD_PATH "${CMAKE_SOURCE_DIR}/metamod-source" CACHE PATH "Path to MetaMo
 # Include directories - shared across all projects
 include_directories(
     /
-    ${HL2SDK_PATH}/game/shared
-    ${HL2SDK_PATH}/game
-    ${HL2SDK_PATH}/public
-    ${HL2SDK_PATH}/public/engine
-    ${HL2SDK_PATH}/public/tier0
-    ${HL2SDK_PATH}/public/tier1
-    ${HL2SDK_PATH}/public/game/server
     ${METAMOD_PATH}/core
     ${METAMOD_PATH}/core/sourcehook
 )
 
 # Auto-discover all HL2SDK include directories
-file(GLOB_RECURSE ALL_HL2SDK_PATHS
+file(GLOB_RECURSE ALL_HL2SDK_PATHS LIST_DIRECTORIES true
     CONFIGURE_DEPENDS
     "${CMAKE_SOURCE_DIR}/hl2sdk-csgo/*"
 )
+
+message(STATUS "Found paths: ${ALL_HL2SDK_PATHS}")
+list(LENGTH ALL_HL2SDK_PATHS path_count)
+message(STATUS "Number of paths: ${path_count}")
 
 set(HL2SDK_INCLUDE_DIRS "")
 foreach(path IN LISTS ALL_HL2SDK_PATHS)
@@ -43,6 +40,7 @@ foreach(path IN LISTS ALL_HL2SDK_PATHS)
         list(APPEND HL2SDK_INCLUDE_DIRS ${path})
     endif()
 endforeach()
+message(STATUS "Final include dirs: ${HL2SDK_INCLUDE_DIRS}")
 
 include_directories(${HL2SDK_INCLUDE_DIRS})
 
@@ -62,6 +60,25 @@ list(APPEND SE_COMPILE_DEFINITIONS
     SE_PORTAL2=11
     SE_CSGO=12
     SE_DOTA=14
+
+    COMPILER_MSVC
+    COMPILER_MSVC32
+    PLATFORM_WINDOWS_PC32
+    WIN32
+    _WIN32
+    _WINDOWS
+    _X86_
+    _MBCS
+    
+    # Game-specific definitions
+    GAME_DLL
+    VERSION_SAFE_STEAM_API_INTERFACES
+    
+    # Disable problematic warnings/features
+    _CRT_SECURE_NO_DEPRECATE
+    _CRT_SECURE_NO_WARNINGS
+    _CRT_NONSTDC_NO_DEPRECATE
+    NOMINMAX
 )
 
 # Platform-specific definitions and compiler settings
@@ -123,3 +140,4 @@ endfunction()
 
 # Add subdirectories for individual projects
 add_subdirectory(TicklessAirstrafe)
+add_subdirectory(TicklessJump)

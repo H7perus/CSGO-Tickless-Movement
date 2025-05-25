@@ -21,6 +21,7 @@ IGameMovement* SgmIface = nullptr;
 CMoveData* mv = nullptr;
 CGameMovement* gm = nullptr;
 CGlobalVars *gpGlobals = nullptr;
+ICvar *icvar = nullptr;
 
 SH_DECL_MANUALHOOK3_void(AirAccelerate, 25, 0, 0, Vector&, float, float);
 
@@ -33,7 +34,7 @@ ConVar sv_airaccelerate_tickless("sv_airaccelerate_tickless", "1", 0, "Toggles a
 //ConVar sv_airaccelerate_tickless_debug("sv_airaccelerate_tickless_debug", "0", 0, "debug 'tickless' airstrafe states");
 ConVar sv_airaccelerate_tickless_profile("sv_airaccelerate_tickless_profile", "1", 0, "prints out the runtime in milliseconds");
 
-ICvar *icvar = nullptr;
+
 
 class BaseAccessor : public IConCommandBaseAccessor
  {
@@ -73,7 +74,7 @@ bool TicklessAirstrafe::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
     }
     else
     {
-        if (ismm) ismm->LogMsg(this, "IGameMovement ");
+        if (ismm) ismm->LogMsg(this, "Failed to load TLAS, SgmIface is null \n");
         return false;
     }
     DisablePred();
